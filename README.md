@@ -56,22 +56,40 @@ Thanks for your time and effort. We'll be in touch soon!
 
 ## Solution
 
-I completed the assessment with the following additions:
+I have implemented the requested features with the following approach:
 
-*   **Due Dates**: Added a date picker to the creation form. Overdue items are highlighted in red.
-*   **Task Images**: Integrated the Pexels API. It automatically pulls an image matching the task title to make the list look better.
-*   **Dependencies**:
-    *   Implemented a dependency graph using `reactflow`.
-    *   Calculated the **Critical Path** and highlighted it in red on the graph.
-    *   Added logic to calculate the earliest start date based on dependencies.
+### 1. Due Dates
+- Added a `dueDate` field to the database schema.
+- The list view displays the due date, which turns red if the task is overdue.
+- Added validation to prevent setting a due date earlier than a task's dependencies.
+
+### 2. Task Images
+- Integrated the Pexels API to fetch images based on the task title.
+- Requests are handled server-side to protect the API key.
+- Images load asynchronously with a loading state on the frontend.
+
+### 3. Dependencies
+- **Logic:** Tasks can depend on multiple existing tasks. The system calculates the "Earliest Start Date" based on the latest due date of those dependencies.
+- **Status Indicators:**
+  - If a dependency is overdue, the start date indicator turns orange to signal a blocker.
+  - Otherwise, it displays the calculated start date in teal.
+- **Graph View:**
+  - Visualized dependencies using React Flow.
+  - Implemented a custom hierarchical layout algorithm to organize tasks top-down.
+  - Graph edges turn red if a dependency is overdue, highlighting the specific link causing a delay.
 
 ### Screenshots
 
 **List View**
-![List View](./screenshots/list-view.png)
+<img src="./screenshots/list-view.png" width="700" alt="List View">
+<br>
 
-**Dependency Graph**
-![Dependency Graph](./screenshots/graph-view.png)
+**List View without Due Date**
+<img src="./screenshots/list-view-2.png" width="700" alt="List View">
+<br>
+
+**Dependency Graph (React Flow)**
+<img src="./screenshots/graph-view.png" width="700" alt="Dependency Graph">
 
 
 
