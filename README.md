@@ -65,8 +65,6 @@ I have implemented the requested features with the following approach:
 
 ### 2. Task Images
 - Integrated the Pexels API to fetch images based on the task title.
-- Requests are handled server-side to protect the API key.
-- Images load asynchronously with a loading state on the frontend.
 
 ### 3. Dependencies
 - **Logic:** Tasks can depend on multiple existing tasks. The system calculates the "Earliest Start Date" based on the latest due date of those dependencies.
@@ -80,16 +78,19 @@ I have implemented the requested features with the following approach:
 
 ### Screenshots
 
-**List View**
-<img src="./screenshots/list-view.png" width="700" alt="List View">
+**List View (Overdue Tasks)**
+<img src="./screenshots/list-view.png" width="700">
+<p>List View showing tasks with overdue dates (red), task blocked by overdue dependencies (orange), and normal task start dates</p> 
 <br>
 
-**List View without Due Date**
-<img src="./screenshots/list-view-2.png" width="700" alt="List View">
+**List View (Standard Appearance)**
+<img src="./screenshots/list-view-2.png" width="700">
+
 <br>
 
-**Dependency Graph (React Flow)**
-<img src="./screenshots/graph-view.png" width="700" alt="Dependency Graph">
+**Dependency Graph**
+<img src="./screenshots/graph-view.png" width="700">
+<p>Dependency Graph visualizing task relationships. Edges are highlighted in red if the preceding task is overdue.</p>
 
 
 
