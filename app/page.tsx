@@ -35,6 +35,22 @@ export default function Home() {
 
   const handleAddTodo = async () => {
     if (!newTodo.trim()) return;
+
+    // Prevent setting due date earlier than dependencies.
+    if (dueDate && selectedDependencies.length > 0) {
+      const newDueDate = new Date(dueDate);
+      for (const depId of selectedDependencies) {
+        const dep = todos.find(t => t.id === depId);
+        if (dep && dep.dueDate) {
+          const depDueDate = new Date(dep.dueDate);
+          if (newDueDate < depDueDate) {
+            alert(`Invalid Date: The new task cannot be due before its dependency "${dep.title}" (Due: ${depDueDate.toLocaleString()}).`);
+            return;
+          }
+        }
+      }
+    }
+
     setIsLoading(true);
     try {
       await fetch('/api/todos', {

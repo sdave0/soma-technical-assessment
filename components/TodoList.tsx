@@ -49,7 +49,7 @@ export const TodoList: React.FC<TodoListProps> = ({
                                             Depends on: {todo.dependencies.map((dep) => dep.title).join(', ')}
                                         </span>
                                         {earliestStart && (
-                                            <span className="text-xs text-teal-600 font-semibold block mt-0.5">
+                                            <span className={`text-xs block mt-0.5 ${earliestStart < new Date() ? 'text-orange-500 font-bold' : 'text-teal-600 font-semibold'}`}>
                                                 Start after: {earliestStart.toLocaleString()}
                                             </span>
                                         )}

@@ -2,7 +2,6 @@
 
 import React, { useCallback } from 'react';
 import ReactFlow, {
-  MiniMap,
   Controls,
   Background,
   useNodesState,
@@ -48,47 +47,71 @@ const DependencyGraph: React.FC<DependencyGraphProps> = ({ todos }) => {
   const initialNodes: TodoNode[] = [];
   const initialEdges: TodoEdge[] = [];
 
-  const nodePositions: { [key: number]: { x: number; y: number } } = {};
-  const gridSize = 200;
-  let x = 0;
-  let y = 0;
+  // 1. Calculate Levels for Hierarchical Layout
+  const levels: { [key: number]: number } = {};
+  const todoMap = new Map(todos.map(t => [t.id, t]));
 
-  todos.forEach((todo, index) => {
-    initialNodes.push({
-      id: todo.id.toString(),
-      data: { label: todo.title, dueDate: todo.dueDate },
-      position: { x, y },
-      type: 'default',
-    });
-    nodePositions[todo.id] = { x, y };
+  // Initialize all levels to 0
+  todos.forEach(t => levels[t.id] = 0);
 
-    x += gridSize;
-    if ((index + 1) % 3 === 0) {
-      x = 0;
-      y += gridSize;
+  // Function to calculate depth recursively
+  const getDepth = (id: number, visited = new Set<number>()): number => {
+    if (visited.has(id)) return 0; // Cycle detection/prevention
+    visited.add(id);
+    
+    const todo = todoMap.get(id);
+    if (!todo || !todo.dependencies || todo.dependencies.length === 0) {
+      return 0;
     }
+
+    let maxDepth = 0;
+    todo.dependencies.forEach(dep => {
+       maxDepth = Math.max(maxDepth, getDepth(dep.id, new Set(visited)));
+    });
+    
+    return maxDepth + 1;
+  };
+
+  // Calculate depth for all nodes
+  todos.forEach(t => {
+    levels[t.id] = getDepth(t.id);
   });
 
-  todos.forEach(todo => {
-    // Find critical dependency (latest due date)
-    let criticalDepId = -1;
-    let maxDate = 0;
+  // 2. Group by Level
+  const nodesByLevel: { [key: number]: TodoWithDependencies[] } = {};
+  Object.entries(levels).forEach(([id, level]) => {
+    if (!nodesByLevel[level]) nodesByLevel[level] = [];
+    const todo = todoMap.get(Number(id));
+    if (todo) nodesByLevel[level].push(todo);
+  });
 
-    if (todo.dependencies && todo.dependencies.length > 0) {
-      todo.dependencies.forEach(dep => {
-        if (dep.dueDate) {
-          const d = new Date(dep.dueDate).getTime();
-          if (d > maxDate) {
-            maxDate = d;
-            criticalDepId = dep.id;
-          }
-        }
+  // 3. Assign Positions
+  const HORIZONTAL_SPACING = 250;
+  const VERTICAL_SPACING = 150;
+
+  Object.entries(nodesByLevel).forEach(([levelStr, levelNodes]) => {
+    const level = Number(levelStr);
+    const levelWidth = levelNodes.length * HORIZONTAL_SPACING;
+    let currentX = -(levelWidth / 2); // Center the level
+
+    levelNodes.forEach(todo => {
+      initialNodes.push({
+        id: todo.id.toString(),
+        data: { label: todo.title, dueDate: todo.dueDate },
+        position: { x: currentX, y: level * VERTICAL_SPACING },
+        type: 'default',
       });
-    }
+      currentX += HORIZONTAL_SPACING;
+    });
+  });
 
+  // Create edges
+  todos.forEach(todo => {
     if (todo.dependencies) {
       todo.dependencies.forEach(dep => {
-        const isCritical = dep.id === criticalDepId;
+        // Highlight if the dependency is overdue
+        const isOverdue = dep.dueDate ? new Date(dep.dueDate) < new Date() : false;
+        
         initialEdges.push({
           id: `e${dep.id}-${todo.id}`,
           source: dep.id.toString(),
@@ -98,14 +121,14 @@ const DependencyGraph: React.FC<DependencyGraphProps> = ({ todos }) => {
             type: MarkerType.ArrowClosed,
             width: 20,
             height: 20,
-            color: isCritical ? '#ef4444' : '#b1b1b7',
+            color: isOverdue ? '#ef4444' : '#b1b1b7',
           },
           style: {
-            stroke: isCritical ? '#ef4444' : '#b1b1b7',
-            strokeWidth: isCritical ? 2 : 1,
+            stroke: isOverdue ? '#ef4444' : '#b1b1b7',
+            strokeWidth: isOverdue ? 2 : 1,
           },
-          animated: isCritical,
-          label: isCritical ? 'Critical' : undefined,
+          animated: isOverdue,
+          label: isOverdue ? 'Overdue' : undefined,
         });
       });
     }
@@ -129,7 +152,6 @@ const DependencyGraph: React.FC<DependencyGraphProps> = ({ todos }) => {
         onConnect={onConnect}
         fitView
       >
-        <MiniMap />
         <Controls />
         <Background gap={12} size={1} />
       </ReactFlow>
